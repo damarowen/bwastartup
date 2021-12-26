@@ -2,10 +2,12 @@ package helper
 
 import (
 	"bwastartup/user"
+	"fmt"
+	"strings"
 )
 
 type Response struct {
-	Meta Meta
+	Meta Meta `json:"meta"`
 	Data interface{} `json:"data"`
 }
 
@@ -18,11 +20,29 @@ type Meta struct {
 
 func ApiResponse(status bool, message string, code int, data interface{}, err interface{}) Response {
 
+	//normal
+	//var errors []string
+	//for _,e := range err.(validator.ValidationErrors){
+	//	errors = append(errors, e.Error())
+	//}
+	//errMessage := gin.H{"ERROR": errors}
+	//
+
+	fmt.Printf("type: %T\n", err)
+
+	var dataErr  interface{}
+	//logic error = " jika tidak ada error
+	if len(err.(string)) > 0 {
+		dataErr = strings.Split(err.(string), "\n")
+	} else {
+		dataErr = ""
+	}
+
 	Meta := Meta{
 		Status:  status,
 		Message: message,
 		Code:    code,
-		Errors:  err,
+		Errors:  dataErr,
 	}
 
 	jsonResponse := Response{
@@ -32,18 +52,6 @@ func ApiResponse(status bool, message string, code int, data interface{}, err in
 
 	return jsonResponse
 }
-
-//func ApiErrorResponse(message string, err string, data interface{}) Response {
-//	fmt.Println(err, "<<<<<<<<<")
-//	splittedError := strings.Split(err, "\n")
-//	res := Response{
-//		Status:  false,
-//		Message: message,
-//		Errors:  splittedError,
-//		Data:    data,
-//	}
-//	return res
-//}
 
 func MappingResponseUser(u user.User, token string) user.DtoResponseUser {
 

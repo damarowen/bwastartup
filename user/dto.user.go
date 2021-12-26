@@ -9,8 +9,17 @@ type DtoResponseUser struct {
 }
 
 type DtoRegisterUserInput struct {
-	Name       string
-	Occupation string
-	Email      string
-	Password   string
+	Name       string `json:"name" binding:"required"`
+	Occupation string `json:"occupation" binding:"required"`
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required"`
+}
+
+type DtoLoginUserInput struct {
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required"`
+}
+
+type DtoEmailChecker struct {
+	Email      string `json:"email" binding:"required,email"`
 }

@@ -28,6 +28,9 @@ func main() {
 
 	userRoutes := r.Group("/api/v1/user")
 	userRoutes.POST("/register", userHandler.RegisterUser)
+	userRoutes.POST("/sessions", userHandler.LoginUser)
+	userRoutes.POST("/email_checker", userHandler.IsDuplicateEmail)
+
 	err = r.Run(":3000")
 	if err != nil {
 		log.Fatal(err.Error())

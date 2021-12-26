@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"github.com/mashingan/smapping"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -8,6 +9,8 @@ import (
 
 type IUserService interface {
 	RegisterUser(user DtoRegisterUserInput) (User, error)
+	LoginUser(user DtoLoginUserInput)(User, error)
+	IsDuplicateEmail(email string) (bool, error)
 }
 
 type UserService struct {
@@ -31,6 +34,36 @@ func (s *UserService) RegisterUser(input DtoRegisterUserInput) (User, error) {
 		log.Fatalf("Failed map %v", err)
 	}
 	return data, nil
+}
+
+func (s *UserService) LoginUser(input DtoLoginUserInput) (User,error){
+	user, err := s.userRepository.FindByEmail(input.Email)
+
+	if err != nil{
+		return user, err
+	}
+
+	if user.ID == 0{
+		return user, errors.New("User not found")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password))
+	if err != nil {
+		return user, errors.New("Password not match")
+	}
+
+	return user, nil
+}
+
+func (s *UserService) IsDuplicateEmail(email string) (bool, error) {
+	user, err := s.userRepository.FindByEmail(email)
+	if err != nil {
+		return false, err
+	}
+	if user.ID > 0 {
+		return true, err
+	}
+	return false, err
 }
 
 func hashAndSalt(pwd []byte) string {
