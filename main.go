@@ -8,6 +8,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
+	"net/http"
 )
 
 func main() {
@@ -26,7 +27,8 @@ func main() {
 
 	r := gin.Default()
 
-	userRoutes := r.Group("/api/v1/user")
+
+	userRoutes := r.Group("/api/v1/user", bodySizeMiddleware)
 	userRoutes.POST("/register", userHandler.RegisterUser)
 	userRoutes.POST("/sessions", userHandler.LoginUser)
 	userRoutes.POST("/email_checker", userHandler.IsDuplicateEmail)
@@ -38,18 +40,10 @@ func main() {
 	}
 }
 
-//func handler(c* gin.Context){
-//	dsn := "root:root@tcp(127.0.0.1:3306)/bwagolang?charset=utf8mb4&parseTime=True&loc=Local"
-//	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-//
-//	if err != nil {
-//		log.Fatal(err.Error())
-//	}
-//	fmt.Println("Connected to DB Success")
-//	var users []user.User
-//
-//	db.Find(&users)
-//	c.JSON(http.StatusOK, users)
-//	c.JSON(http.StatusOK, "ok")
-//
-//}
+//limt upload
+func bodySizeMiddleware(c *gin.Context) {
+	var w http.ResponseWriter = c.Writer
+	c.Request.Body = http.MaxBytesReader(w, c.Request.Body, 1 * 1024 * 1024) // 1 Mb)
+
+	c.Next()
+}

@@ -106,7 +106,7 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 
 	file, err := c.FormFile("avatar")
 	if err != nil {
-		res := helper.ApiResponse(false, "error in form file", http.StatusBadRequest, nil, err.Error())
+		res := helper.ApiResponse(false, "error in form file", http.StatusBadRequest, nil,"file maximum 1 mb, your file is more than 1 mb")
 		c.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
