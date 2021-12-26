@@ -30,6 +30,7 @@ func main() {
 	userRoutes.POST("/register", userHandler.RegisterUser)
 	userRoutes.POST("/sessions", userHandler.LoginUser)
 	userRoutes.POST("/email_checker", userHandler.IsDuplicateEmail)
+	userRoutes.POST("/avatar", userHandler.UploadAvatar)
 
 	err = r.Run(":3000")
 	if err != nil {

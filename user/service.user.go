@@ -9,8 +9,9 @@ import (
 
 type IUserService interface {
 	RegisterUser(user DtoRegisterUserInput) (User, error)
-	LoginUser(user DtoLoginUserInput)(User, error)
+	LoginUser(user DtoLoginUserInput) (User, error)
 	IsDuplicateEmail(email string) (bool, error)
+	SaveAvatarUser(ID int, fileLocation string) (User, error)
 }
 
 type UserService struct {
@@ -36,14 +37,14 @@ func (s *UserService) RegisterUser(input DtoRegisterUserInput) (User, error) {
 	return data, nil
 }
 
-func (s *UserService) LoginUser(input DtoLoginUserInput) (User,error){
+func (s *UserService) LoginUser(input DtoLoginUserInput) (User, error) {
 	user, err := s.userRepository.FindByEmail(input.Email)
 
-	if err != nil{
+	if err != nil {
 		return user, err
 	}
 
-	if user.ID == 0{
+	if user.ID == 0 {
 		return user, errors.New("User not found")
 	}
 
@@ -64,6 +65,20 @@ func (s *UserService) IsDuplicateEmail(email string) (bool, error) {
 		return true, err
 	}
 	return false, err
+}
+
+func (s *UserService) SaveAvatarUser(id int, fileLocation string) (User, error) {
+	u, err := s.userRepository.FindById(id)
+	if err != nil {
+		return u, err
+	}
+	u.AvatarFileName = fileLocation
+	u, err = s.userRepository.UpdateUser(u)
+	if err != nil {
+		return u, err
+	}
+	return u , nil
+
 }
 
 func hashAndSalt(pwd []byte) string {
