@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bwastartup/auth"
 	"bwastartup/handler"
 	"bwastartup/user"
 	"fmt"
@@ -23,7 +24,8 @@ func main() {
 
 	userRepository := user.NewUserRepository(DB)
 	userService := user.NewUserService(userRepository)
-	userHandler := handler.NewUserHandler(userService)
+	authService := auth.NewJWTService()
+	userHandler := handler.NewUserHandler(userService, authService)
 
 	r := gin.Default()
 

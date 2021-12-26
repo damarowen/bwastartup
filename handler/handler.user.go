@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bwastartup/auth"
 	"bwastartup/helper"
 	"bwastartup/user"
 	"fmt"
@@ -18,10 +19,11 @@ type IUserHandler interface {
 
 type userHandler struct {
 	userService user.IUserService
+	authService auth.IJwtService
 }
 
-func NewUserHandler(userService user.IUserService) IUserHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService user.IUserService, authService auth.IJwtService) IUserHandler {
+	return &userHandler{userService, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -48,7 +50,8 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	mapping := helper.MappingResponseUser(newUser, "test")
+	token := h.authService.GenerateToken(newUser.ID, newUser.Name, newUser.Email)
+	mapping := helper.MappingResponseUser(newUser, token)
 	resp := helper.ApiResponse(true, "success", http.StatusOK, mapping, "")
 	c.JSON(http.StatusCreated, resp)
 
@@ -70,8 +73,9 @@ func (h *userHandler) LoginUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
-
-	resp := helper.ApiResponse(true, "success", http.StatusOK, userLogin, "")
+	token := h.authService.GenerateToken(userLogin.ID, userLogin.Name, userLogin.Email)
+	mapping := helper.MappingResponseUser(userLogin, token)
+	resp := helper.ApiResponse(true, "success", http.StatusOK, mapping, "")
 	c.JSON(http.StatusCreated, resp)
 
 }
