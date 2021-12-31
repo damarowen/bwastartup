@@ -31,3 +31,10 @@ func AuthorizeJWT(jwtService auth.IJwtService) gin.HandlerFunc {
 	}
 }
 
+//limt upload
+func BodySizeMiddleware(c *gin.Context) {
+	var w http.ResponseWriter = c.Writer
+	c.Request.Body = http.MaxBytesReader(w, c.Request.Body, 1 * 1024 * 1024) // 1 Mb)
+
+	c.Next()
+}

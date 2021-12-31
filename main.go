@@ -3,13 +3,13 @@ package main
 import (
 	"bwastartup/auth"
 	"bwastartup/handler"
+	"bwastartup/middleware"
 	"bwastartup/user"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
 )
 
 func main() {
@@ -30,11 +30,11 @@ func main() {
 	r := gin.Default()
 
 
-	userRoutes := r.Group("/api/v1/user", bodySizeMiddleware)
+	userRoutes := r.Group("/api/v1/user")
 	userRoutes.POST("/register", userHandler.RegisterUser)
 	userRoutes.POST("/sessions", userHandler.LoginUser)
 	userRoutes.POST("/email_checker", userHandler.IsDuplicateEmail)
-	userRoutes.POST("/avatar", userHandler.UploadAvatar)
+	userRoutes.POST("/avatar", middleware.AuthorizeJWT(authService),  middleware.BodySizeMiddleware, userHandler.UploadAvatar)
 
 	err = r.Run(":3000")
 	if err != nil {
@@ -42,10 +42,5 @@ func main() {
 	}
 }
 
-//limt upload
-func bodySizeMiddleware(c *gin.Context) {
-	var w http.ResponseWriter = c.Writer
-	c.Request.Body = http.MaxBytesReader(w, c.Request.Body, 1 * 1024 * 1024) // 1 Mb)
 
-	c.Next()
-}
+
