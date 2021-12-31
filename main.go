@@ -2,14 +2,16 @@ package main
 
 import (
 	"bwastartup/auth"
+	"bwastartup/campaign"
 	"bwastartup/handler"
 	"bwastartup/middleware"
 	"bwastartup/user"
 	"fmt"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 )
 
 func main() {
@@ -27,6 +29,10 @@ func main() {
 	authService := auth.NewJWTService()
 	userHandler := handler.NewUserHandler(userService, authService)
 
+	campaignRepository := campaign.NewCampaignRepository(DB)
+	campaignService := campaign.NewCampaignService(campaignRepository)
+	campaignHandler :=  handler.NewCampaignHandler(campaignService)
+
 	r := gin.Default()
 
 
@@ -35,6 +41,10 @@ func main() {
 	userRoutes.POST("/sessions", userHandler.LoginUser)
 	userRoutes.POST("/email_checker", userHandler.IsDuplicateEmail)
 	userRoutes.POST("/avatar", middleware.AuthorizeJWT(authService),  middleware.BodySizeMiddleware, userHandler.UploadAvatar)
+
+	campaignRoutes := r.Group("/api/v1/campaign")
+	campaignRoutes.GET("/", campaignHandler.GetCampaigns)
+
 
 	err = r.Run(":3000")
 	if err != nil {
