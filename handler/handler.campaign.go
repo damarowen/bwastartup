@@ -23,17 +23,17 @@ func NewCampaignHandler(campaign campaign.ICampaignService) ICampaignHandler {
 
 func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 
-	userID, _ := strconv.Atoi(c.Query("userId"))
+	userID, _ := strconv.Atoi(c.Query("user_id"))
 
-	campaign, err := h.campaignService.GetCampaigns(userID)
+	getCampaign, err := h.campaignService.GetCampaigns(userID)
 
 	if err != nil {
-		res := helper.ApiResponse(false, "error", http.StatusBadRequest, nil, err.Error())
+		res := helper.ApiResponse(false, "error", http.StatusBadRequest, getCampaign, err.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	resp := helper.ApiResponse(true, "list of campaign", http.StatusOK, campaign, "")
+	resp := helper.ApiResponse(true, "list of campaign", http.StatusOK, campaign.MappingResponseCampaign(getCampaign), "")
 	c.JSON(http.StatusOK, resp)
 
 }

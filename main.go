@@ -7,6 +7,7 @@ import (
 	"bwastartup/middleware"
 	"bwastartup/user"
 	"fmt"
+	"gorm.io/gorm/logger"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ import (
 func main() {
 
 	dsn := "root:root@tcp(127.0.0.1:3306)/bwagolang?charset=utf8mb4&parseTime=True&loc=Local"
-	DB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	DB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{ Logger: logger.Default.LogMode(logger.Info)})
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -43,7 +44,9 @@ func main() {
 	userRoutes.POST("/avatar", middleware.AuthorizeJWT(authService),  middleware.BodySizeMiddleware, userHandler.UploadAvatar)
 
 	campaignRoutes := r.Group("/api/v1/campaign")
-	campaignRoutes.GET("/", campaignHandler.GetCampaigns)
+	campaignRoutes.GET("", campaignHandler.GetCampaigns)
+
+	r.Static("/gambar", "./images")
 
 
 	err = r.Run(":3000")

@@ -15,11 +15,11 @@ func NewCampaignService(CampaingRepo ICampaignRepository) ICampaignService {
 func (s *CampaignService) GetCampaigns(userId int) ([]Campaign, error) {
 
 	if userId != 0 {
-			campaings, err := s.CampaingRepository.FindByUserId(userId)
+			c, err := s.CampaingRepository.FindByUserId(userId)
 			if err != nil {
-				return campaings, err
+				return c, err
 			}
-			return campaings , nil
+			return c , nil
 
 	}
 
