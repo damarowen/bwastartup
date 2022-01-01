@@ -3,13 +3,14 @@ package middleware
 import (
 	"bwastartup/auth"
 	"bwastartup/helper"
+	"bwastartup/user"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 
-func AuthorizeJWT(jwtService auth.IJwtService) gin.HandlerFunc {
+func AuthorizeJWT(jwtService auth.IJwtService, userService user.IUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -25,7 +26,9 @@ func AuthorizeJWT(jwtService auth.IJwtService) gin.HandlerFunc {
 		}
 		if token.Valid {
 			claims := token.Claims.(jwt.MapClaims)
-			c.Set("CurrentUser", claims)
+			userID := int(claims["user_id"].(float64))
+			u, _ := userService.FindById(userID)
+			c.Set("CurrentUser", u)
 			c.Next()
 		}
 	}

@@ -41,10 +41,13 @@ func main() {
 	userRoutes.POST("/register", userHandler.RegisterUser)
 	userRoutes.POST("/sessions", userHandler.LoginUser)
 	userRoutes.POST("/email_checker", userHandler.IsDuplicateEmail)
-	userRoutes.POST("/avatar", middleware.AuthorizeJWT(authService),  middleware.BodySizeMiddleware, userHandler.UploadAvatar)
+	userRoutes.POST("/avatar", middleware.AuthorizeJWT(authService, userService),  middleware.BodySizeMiddleware, userHandler.UploadAvatar)
 
 	campaignRoutes := r.Group("/api/v1/campaign")
 	campaignRoutes.GET("", campaignHandler.GetCampaigns)
+	campaignRoutes.POST("", middleware.AuthorizeJWT(authService, userService), campaignHandler.CreateCampaign)
+	campaignRoutes.GET("/:id", campaignHandler.GetCampaign)
+	campaignRoutes.PUT("/:id", middleware.AuthorizeJWT(authService, userService),campaignHandler.UpdateCampaign)
 
 	r.Static("/gambar", "./images")
 

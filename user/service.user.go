@@ -12,6 +12,7 @@ type IUserService interface {
 	LoginUser(user DtoLoginUserInput) (User, error)
 	IsDuplicateEmail(email string) (bool, error)
 	SaveAvatarUser(ID int, fileLocation string) (User, error)
+	FindById(id int) (User, error)
 }
 
 type UserService struct {
@@ -74,6 +75,15 @@ func (s *UserService) SaveAvatarUser(id int, fileLocation string) (User, error) 
 	}
 	u.AvatarFileName = fileLocation
 	u, err = s.userRepository.UpdateUser(u)
+	if err != nil {
+		return u, err
+	}
+	return u , nil
+
+}
+
+func (s *UserService) FindById (id int) (User, error) {
+	u, err := s.userRepository.FindById(id)
 	if err != nil {
 		return u, err
 	}

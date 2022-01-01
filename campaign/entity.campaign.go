@@ -1,9 +1,14 @@
 package campaign
 
-import "time"
+import (
+	"bwastartup/user"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"time"
+)
 
 type Campaign struct {
-	ID             int
+	ID              uuid.UUID
 	UserId           int
 	Name     string
 	ShortDescription          string
@@ -14,15 +19,27 @@ type Campaign struct {
 	CurrentAmount           int
 	Slug           string
 	CampaignImages []CampaignImage
+	User user.User
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
 
 type CampaignImage struct {
-	ID             int
-	CampaignId           int
+	ID               int
+	CampaignId           uuid.UUID
 	FileName     string
 	IsPrimary          int
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+}
+
+func (c *Campaign) BeforeCreate(tx *gorm.DB) (err error) {
+	c.ID = uuid.Must(uuid.NewRandom())
+
+
+
+	//if !c.IsValid() {
+	//	err = errors.New("can't save invalid data")
+	//}
+	return
 }
