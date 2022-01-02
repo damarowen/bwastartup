@@ -69,5 +69,11 @@ type DtoImageCampaignFormat struct {
 	IsPrimary bool `json:"is_primary"`
 }
 
+type DtoCreateCampaignImage struct {
+	CampaignId         string    `form:"campaign_id" binding:"required,uuid"`
+	IsPrimary bool `form:"is_primary" `
+	User user.User
+}
+
 
 

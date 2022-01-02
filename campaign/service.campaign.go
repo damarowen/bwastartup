@@ -1,10 +1,12 @@
 package campaign
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
-	"errors"
+	"github.com/mashingan/smapping"
+	"log"
 )
 
 type ICampaignService interface {
@@ -12,6 +14,7 @@ type ICampaignService interface {
 	GetCampaignById(dto DtoCampaignDetailById) (Campaign, error)
 	CreateCampaign(dto DtoCreateCampaign) (Campaign, error)
 	UpdateCampaign(id DtoCampaignDetailById, dto DtoUpdateCampaign) (Campaign, error)
+	SaveCampaignImage(input DtoCreateCampaignImage, fileLocation string) (CampaignImage, error)
 }
 
 type CampaignService struct {
@@ -54,18 +57,15 @@ func (s *CampaignService) GetCampaignById(dto DtoCampaignDetailById) (Campaign, 
 
 func (s *CampaignService) CreateCampaign(input DtoCreateCampaign) (Campaign, error) {
 
-	data := Campaign{
-		Name:             input.Name,
-		Description:      input.Description,
-		ShortDescription: input.ShortDescription,
-		GoalAmount:       input.GoalAmount,
-		Perks:            input.Perks,
-	}
-	data.UserId = input.User.ID
-	slugify := fmt.Sprintf("%s %d", input.Name, input.User.ID)
-	data.Slug = slug.Make(slugify)
+	campaign := Campaign{}
 
-	c, err := s.CampaignRepository.SaveCampaign(data)
+	err := smapping.FillStruct(&campaign, smapping.MapFields(&input))
+
+	campaign.UserId = input.User.ID
+	slugify := fmt.Sprintf("%s %d", input.Name, input.User.ID)
+	campaign.Slug = slug.Make(slugify)
+
+	c, err := s.CampaignRepository.SaveCampaign(campaign)
 
 	if err != nil {
 		return c, err
@@ -81,8 +81,7 @@ func (s *CampaignService) UpdateCampaign(id DtoCampaignDetailById, input DtoUpda
 	if err != nil {
 		return c, err
 	}
-	fmt.Println(c.UserId != input.User.ID, ",,,<<<")
-	if c.UserId != input.User.ID{
+	if c.UserId != input.User.ID {
 		return c, errors.New("not authorize, different user")
 	}
 
@@ -102,4 +101,42 @@ func (s *CampaignService) UpdateCampaign(id DtoCampaignDetailById, input DtoUpda
 
 	return data, nil
 
+}
+
+func (s *CampaignService) SaveCampaignImage(input DtoCreateCampaignImage, fileLocation string) (CampaignImage, error) {
+
+	_ID, _ := uuid.Parse(input.CampaignId)
+	c, err := s.CampaignRepository.FindById(_ID)
+	if err != nil {
+		return CampaignImage{}, err
+	}
+
+	if c.UserId != input.User.ID {
+		return CampaignImage{}, errors.New("not authorize, different user")
+	}
+
+	isPrimary := 0
+	//if is true
+	if input.IsPrimary {
+		isPrimary = 1
+
+		//reset image is primary
+		ok, err := s.CampaignRepository.SetImagesNonPrimary(_ID)
+		if !ok || err != nil{
+			log.Panicln("Set images error")
+		}
+	}
+
+	campaignImage := CampaignImage{
+		CampaignId : _ID,
+		IsPrimary : isPrimary,
+		FileName : fileLocation,
+	}
+
+	newCampaignImage, err := s.CampaignRepository.UploadImagesCampaign(campaignImage)
+	if err != nil {
+		return newCampaignImage, err
+	}
+
+	return newCampaignImage, nil
 }

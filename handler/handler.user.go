@@ -5,7 +5,6 @@ import (
 	"bwastartup/helper"
 	"bwastartup/user"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -116,8 +115,8 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 	date := time.Now().Unix()
-	userId := c.MustGet("CurrentUser").(jwt.MapClaims)["user_id"]
-	path := fmt.Sprintf("images/%d-%d-%s", int(userId.(float64)), date, file.Filename)
+	userId := c.MustGet("CurrentUser").(user.User).ID
+	path := fmt.Sprintf("images/%d-%d-%s", userId, date, file.Filename)
 
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
@@ -127,7 +126,7 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	_, err = h.userService.SaveAvatarUser(int(userId.(float64)), path)
+	_, err = h.userService.SaveAvatarUser(userId, path)
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
 		res := helper.ApiResponse(false, "error in save avatar user", http.StatusBadRequest, data, err.Error())

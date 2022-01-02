@@ -4,8 +4,10 @@ import (
 	"bwastartup/campaign"
 	"bwastartup/helper"
 	"bwastartup/user"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +17,8 @@ type ICampaignHandler interface {
 	GetCampaign(context *gin.Context)
 	CreateCampaign(context *gin.Context)
 	UpdateCampaign(context *gin.Context)
+	UploadImage(context *gin.Context)
+
 }
 
 type campaignHandler struct {
@@ -110,7 +114,7 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 	input.User = currentUser.(user.User)
 	updatedCampaign, errs := h.campaignService.UpdateCampaign(idCampaign,input)
 	if errs != nil {
-		res := helper.ApiResponse(false, "error in updated campaign", http.StatusBadRequest, helper.EmptyObj{}, "not authorize, different user")
+		res := helper.ApiResponse(false, "error in updated campaign", http.StatusBadRequest, helper.EmptyObj{}, errs.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
@@ -118,5 +122,55 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 	resp := helper.ApiResponse(true, "success", http.StatusOK, helper.MappingResponseCampaign(updatedCampaign), "")
 	c.JSON(http.StatusOK, resp)
 
+
+}
+
+func (h *campaignHandler) UploadImage(c *gin.Context) {
+
+	var input campaign.DtoCreateCampaignImage
+	//bind input form
+	err := c.ShouldBind(&input)
+	if err != nil {
+		res := helper.ApiResponse(false, "error in binding input", http.StatusBadRequest, nil,err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		res := helper.ApiResponse(false, "error in form file", http.StatusBadRequest, data,"file maximum 1 mb, your file is more than 1 mb")
+		c.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+	date := time.Now().Unix()
+	currentUser := c.MustGet("CurrentUser")
+	input.User = currentUser.(user.User)
+	userId := currentUser.(user.User).ID
+	path := fmt.Sprintf("images/%d-%d-%s", userId, date, file.Filename)
+
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		res := helper.ApiResponse(false, "error in save upload file", http.StatusBadRequest, data, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+
+
+	_, err = h.campaignService.SaveCampaignImage(input, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		res := helper.ApiResponse(false, "error in save campaign image", http.StatusBadRequest, data, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	data := gin.H{"is_uploaded": true}
+	res := helper.ApiResponse(true, "campaign image succesfuly uploaded", http.StatusOK, data, "")
+	c.JSON(http.StatusOK, res)
 
 }

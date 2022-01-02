@@ -12,6 +12,8 @@ type ICampaignRepository interface {
 	FindAll() ([]Campaign, error)
 	SaveCampaign(campaign Campaign) (Campaign, error)
 	UpdateCampaign(campaign Campaign) (Campaign, error)
+	UploadImagesCampaign(cImage CampaignImage) (CampaignImage, error)
+	SetImagesNonPrimary(campaignId uuid.UUID) (bool, error)
 }
 
 type CampaignRepository struct {
@@ -29,9 +31,8 @@ func (r *CampaignRepository) FindAll() ([]Campaign, error) {
 		return campaigns, err
 	}
 
-	return  campaigns, nil
+	return campaigns, nil
 }
-
 
 func (r *CampaignRepository) FindByUserId(id int) ([]Campaign, error) {
 	var campaigns []Campaign
@@ -44,13 +45,12 @@ func (r *CampaignRepository) FindByUserId(id int) ([]Campaign, error) {
 
 func (r *CampaignRepository) FindById(id uuid.UUID) (Campaign, error) {
 	var c Campaign
-	err := r.db.Preload("User").Preload("CampaignImages",).Where("id = ?", id).Take(&c).Error
+	err := r.db.Preload("User").Preload("CampaignImages").Where("id = ?", id).Take(&c).Error
 	if err != nil {
 		return c, errors.New("Campaign not found")
 	}
 	return c, nil
 }
-
 
 func (r *CampaignRepository) SaveCampaign(c Campaign) (Campaign, error) {
 	err := r.db.Create(&c).Error
@@ -67,4 +67,22 @@ func (r *CampaignRepository) UpdateCampaign(c Campaign) (Campaign, error) {
 		return c, err
 	}
 	return c, nil
+}
+
+func (r *CampaignRepository) UploadImagesCampaign(c CampaignImage) (CampaignImage, error) {
+	err := r.db.Create(&c).Error
+
+	if err != nil {
+		return c, err
+	}
+	return c, nil
+}
+
+func (r *CampaignRepository) SetImagesNonPrimary(campaignId uuid.UUID) (bool, error) {
+	err := r.db.Model(&CampaignImage{}).Where("campaign_id = ?", campaignId).Update("is_primary", false).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+
 }
