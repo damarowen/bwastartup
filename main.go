@@ -17,7 +17,7 @@ func main() {
 	defer sqlDB.Close()
 
 	// apply migration
-		config.InitialMigration()
+	config.InitialMigration()
 
 
 	err := r.Run("127.0.0.1:3000")

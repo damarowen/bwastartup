@@ -6,6 +6,7 @@ import (
 	"bwastartup/config"
 	"bwastartup/handler"
 	"bwastartup/middleware"
+	"bwastartup/transaction"
 	"bwastartup/user"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,14 +14,21 @@ import (
 
 var (
 	db, _          = config.ConnectDatabase()
+
 	userRepository = user.NewUserRepository(db)
 	userService = user.NewUserService(userRepository)
-	authService = auth.NewJWTService()
 	userHandler = handler.NewUserHandler(userService, authService)
+
+	authService = auth.NewJWTService()
 
 	campaignRepository = campaign.NewCampaignRepository(db)
 	campaignService = campaign.NewCampaignService(campaignRepository)
 	campaignHandler =  handler.NewCampaignHandler(campaignService)
+
+	transactionRepository = transaction.NewTransactionRepository(db)
+	transactionService = transaction.NewTransactionService(transactionRepository, campaignRepository)
+	transactionHandler =  handler.NewTransactionHandler(transactionService)
+
 
 )
 
@@ -43,7 +51,15 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		campaignRoutes.POST("", middleware.AuthorizeJWT(authService, userService), campaignHandler.CreateCampaign)
 		campaignRoutes.GET("/:id", campaignHandler.GetCampaign)
 		campaignRoutes.PUT("/:id", middleware.AuthorizeJWT(authService, userService),campaignHandler.UpdateCampaign)
-		campaignRoutes.POST("/campaign-images", middleware.AuthorizeJWT(authService, userService),campaignHandler.UploadImage)
+		campaignRoutes.POST("/campaign-images", middleware.AuthorizeJWT(authService, userService), campaignHandler.UploadImage)
+	}
+
+	transactionRoutes := r.Group("/api/v1/transactions")
+
+	{
+		campaignRoutes.GET("/:id/transactions", middleware.AuthorizeJWT(authService, userService), transactionHandler.GetTransactionsByCampaignId)
+		//MELIHAT TRANSAKSI DARI USER YANG DI DAPAT DARI HEADER
+		transactionRoutes.GET("/", middleware.AuthorizeJWT(authService, userService), transactionHandler.GetUserTransactionsByUserId)
 	}
 
 	r.Static("/gambar", "./images")

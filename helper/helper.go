@@ -2,6 +2,7 @@ package helper
 
 import (
 	"bwastartup/campaign"
+	"bwastartup/transaction"
 	"bwastartup/user"
 	"fmt"
 	"github.com/mashingan/smapping"
@@ -59,6 +60,7 @@ func ApiResponse(status bool, message string, code int, data interface{}, err in
 	return jsonResponse
 }
 
+//User
 func MappingResponseUser(u user.User, token string) user.DtoResponseUser {
 
 	return user.DtoResponseUser{
@@ -71,6 +73,7 @@ func MappingResponseUser(u user.User, token string) user.DtoResponseUser {
 
 }
 
+//Campaign
 func MappingResponseCampaign(c campaign.Campaign) campaign.DtoCampaign {
 
 	var _imageUrl string
@@ -160,4 +163,69 @@ func MappingResponseDetailCampaign(c campaign.Campaign) campaign.DtoCampaignDeta
 	dto.Images = images
 
 	return dto
+}
+
+
+//Transaction
+func MappingResponseCampaignTransaction(t transaction.Transaction) transaction.DtoResponseCampaignTransaction {
+	return transaction.DtoResponseCampaignTransaction{
+		ID:   t.ID,
+		Name: t.User.Name,
+		Amount: t.Amount,
+		CreatedAt : t.CreatedAt,
+	}
+}
+
+func MappingResponseCampaignTransactions(t []transaction.Transaction) []transaction.DtoResponseCampaignTransaction {
+	if len(t) == 0 {
+		return []transaction.DtoResponseCampaignTransaction{}
+	}
+
+	var transactionsFormatter []transaction.DtoResponseCampaignTransaction
+
+	for _, transaction := range t {
+		formatter := MappingResponseCampaignTransaction(transaction)
+		transactionsFormatter = append(transactionsFormatter, formatter)
+	}
+
+	return transactionsFormatter
+}
+
+func MappingResponseUserTransaction(_transaction transaction.Transaction) transaction.DtoMappingResponseUserTransactions {
+
+	var data transaction.DtoMappingResponseUserTransactions
+
+	err := smapping.FillStruct(&data, smapping.MapFields(&_transaction))
+
+	if err != nil {
+		log.Fatalf("Failed map %v", err)
+	}
+
+	data.Campaign.ID =  _transaction.Campaign.ID
+	data.Campaign.Name = _transaction.Campaign.Name
+	data.Campaign.ImageURL = ""
+	data.Campaign.User =  _transaction.Campaign.User
+
+
+	if len(_transaction.Campaign.CampaignImages) > 0 {
+		data.Campaign.ImageURL = _transaction.Campaign.CampaignImages[0].FileName
+	}
+
+	return data
+}
+
+func MappingResponseUserTransactions(_transaction []transaction.Transaction) []transaction.DtoMappingResponseUserTransactions {
+
+	if len(_transaction) == 0 {
+		return []transaction.DtoMappingResponseUserTransactions{}
+	}
+
+	var transactionsFormatter []transaction.DtoMappingResponseUserTransactions
+
+	for _, t := range _transaction {
+		formatter := MappingResponseUserTransaction(t)
+		transactionsFormatter = append(transactionsFormatter, formatter)
+	}
+
+	return transactionsFormatter
 }

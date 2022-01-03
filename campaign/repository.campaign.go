@@ -23,10 +23,11 @@ type CampaignRepository struct {
 func NewCampaignRepository(db *gorm.DB) ICampaignRepository {
 	return &CampaignRepository{db}
 }
+
 func (r *CampaignRepository) FindAll() ([]Campaign, error) {
 	var campaigns []Campaign
 
-	err := r.db.Preload("CampaignImages", "campaign_images.is_primary = 1").Find(&campaigns).Error
+	err := r.db.Preload("CampaignImages", "campaign_images.is_primary = 1").Order("created_at desc").Find(&campaigns).Error
 	if err != nil {
 		return campaigns, err
 	}
