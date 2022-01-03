@@ -15,6 +15,7 @@ type Transaction struct {
 	Amount       int
 	Status    string
 	Code             string
+	PaymentUrl string  `gorm:"type:varchar(100)"`
 	User             user.User
 	Campaign campaign.Campaign
 	CreatedAt        time.Time

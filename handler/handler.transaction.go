@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"bwastartup/helper"
 	"bwastartup/transaction"
 	"bwastartup/user"
-	"bwastartup/helper"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -11,6 +11,7 @@ import (
 type ITransactionHandler interface {
 	GetTransactionsByCampaignId(context *gin.Context)
 	GetUserTransactionsByUserId(context *gin.Context)
+	CreateTransaction(context *gin.Context)
 
 }
 
@@ -61,3 +62,52 @@ func (h *TransactionHandler) GetUserTransactionsByUserId(c *gin.Context) {
 	resp := helper.ApiResponse(true, "list of User Transaction", http.StatusOK, helper.MappingResponseUserTransactions(t), "")
 	c.JSON(http.StatusOK, resp)
 }
+
+func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
+	var input transaction.DtoCreateTransaction
+
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+		res := helper.ApiResponse(false, "error in binding input", http.StatusBadRequest, helper.EmptyObj{}, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	currentUser := c.MustGet("CurrentUser")
+	input.User = currentUser.(user.User)
+
+	newTransaction, err := h.TransactionService.CreateTransaction(input)
+
+	if err != nil {
+		res := helper.ApiResponse(false, "error in create transaction", http.StatusBadRequest, helper.EmptyObj{}, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+
+	resp := helper.ApiResponse(true, "list of User Transaction", http.StatusOK, helper.MappingFormatTransaction(newTransaction), "")
+	c.JSON(http.StatusOK, resp)
+}
+
+//func (h *transactionHandler) GetNotification(c *gin.Context) {
+//	var input transaction.TransactionNotificationInput
+//
+//	err := c.ShouldBindJSON(&input)
+//	if err != nil {
+//		response := helper.APIResponse("Failed to process notification", http.StatusBadRequest, "error", nil)
+//		c.JSON(http.StatusBadRequest, response)
+//
+//		return
+//	}
+//
+//	err = h.service.ProcessPayment(input)
+//	if err != nil {
+//		response := helper.APIResponse("Failed to process notification", http.StatusBadRequest, "error", nil)
+//		c.JSON(http.StatusBadRequest, response)
+//
+//		return
+//	}
+//
+//	c.JSON(http.StatusOK, input)
+//}

@@ -37,3 +37,19 @@ type CampaignFormatter struct {
 	ImageURL string `json:"image_url"`
 	User user.User
 }
+
+type DtoCreateTransaction struct {
+	CampaignId uuid.UUID   `json:"campaign_id" binding:"required"`
+	Amount    int       `json:"amount" binding:"required"`
+	User user.User
+}
+
+type DtoTransactionFormatter struct {
+	ID         uuid.UUID    `json:"id"`
+	CampaignID  uuid.UUID   `json:"campaign_id"`
+	UserID     int    `json:"user_id"`
+	Amount     int    `json:"amount"`
+	Status     string `json:"status"`
+	Code       string `json:"code"`
+	PaymentURL string `json:"payment_url"`
+}

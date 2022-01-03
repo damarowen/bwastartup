@@ -191,6 +191,8 @@ func MappingResponseCampaignTransactions(t []transaction.Transaction) []transact
 	return transactionsFormatter
 }
 
+
+// Transaction
 func MappingResponseUserTransaction(_transaction transaction.Transaction) transaction.DtoMappingResponseUserTransactions {
 
 	var data transaction.DtoMappingResponseUserTransactions
@@ -228,4 +230,16 @@ func MappingResponseUserTransactions(_transaction []transaction.Transaction) []t
 	}
 
 	return transactionsFormatter
+}
+
+func MappingFormatTransaction(t transaction.Transaction) transaction.DtoTransactionFormatter {
+	formatter := transaction.DtoTransactionFormatter{}
+	formatter.ID = t.ID
+	formatter.CampaignID = t.CampaignId
+	formatter.UserID = t.UserId
+	formatter.Amount = t.Amount
+	formatter.Status = t.Status
+	formatter.Code = t.Code
+	formatter.PaymentURL = t.PaymentUrl
+	return formatter
 }

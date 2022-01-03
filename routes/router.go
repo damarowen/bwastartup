@@ -6,6 +6,7 @@ import (
 	"bwastartup/config"
 	"bwastartup/handler"
 	"bwastartup/middleware"
+	"bwastartup/payment"
 	"bwastartup/transaction"
 	"bwastartup/user"
 	"github.com/gin-gonic/gin"
@@ -24,10 +25,12 @@ var (
 	campaignRepository = campaign.NewCampaignRepository(db)
 	campaignService = campaign.NewCampaignService(campaignRepository)
 	campaignHandler =  handler.NewCampaignHandler(campaignService)
+	paymentService = payment.NewService()
 
 	transactionRepository = transaction.NewTransactionRepository(db)
-	transactionService = transaction.NewTransactionService(transactionRepository, campaignRepository)
+	transactionService = transaction.NewTransactionService(transactionRepository, campaignRepository, paymentService)
 	transactionHandler =  handler.NewTransactionHandler(transactionService)
+
 
 
 )
@@ -60,6 +63,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		campaignRoutes.GET("/:id/transactions", middleware.AuthorizeJWT(authService, userService), transactionHandler.GetTransactionsByCampaignId)
 		//MELIHAT TRANSAKSI DARI USER YANG DI DAPAT DARI HEADER
 		transactionRoutes.GET("/", middleware.AuthorizeJWT(authService, userService), transactionHandler.GetUserTransactionsByUserId)
+		transactionRoutes.POST("/", middleware.AuthorizeJWT(authService, userService), transactionHandler.CreateTransaction)
+
 	}
 
 	r.Static("/gambar", "./images")
